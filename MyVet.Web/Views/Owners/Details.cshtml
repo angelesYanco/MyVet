@@ -97,6 +97,12 @@ else
                 @Html.DisplayFor(modelItem => item.Name)
             </td>
             <td>
+                @if (!string.IsNullOrEmpty(item.ImageUrl))
+                {
+                    <img src="@Url.Content(item.ImageUrl)" alt="Image" style="width:200px;max-width:100%;height:auto;"/>
+                }
+            </td>
+            <td>
                 @Html.DisplayFor(modelItem => item.Race)
             </td>
             <td>

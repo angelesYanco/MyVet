@@ -42,7 +42,7 @@ namespace MyVet.Web.Helpers
 
             list.Insert(0, new SelectListItem
             {
-                Text = "[Select a pet type]",
+                Text = "[Select a pet type...]",
                 Value = "0"
             });
 

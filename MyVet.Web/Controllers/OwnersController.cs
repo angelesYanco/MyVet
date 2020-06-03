@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
@@ -20,15 +21,18 @@ namespace MyVet.Web.Controllers
         private readonly DataContext _context;
         private readonly IUserHelper _userHelper;
         private readonly ICombosHelper _combosHelper;
+        private readonly IConverterHelper _converterHelper;
 
         public OwnersController(
             DataContext context, 
             IUserHelper userHelper,
-            ICombosHelper combosHelper)
+            ICombosHelper combosHelper,
+            IConverterHelper converterHelper)
         {
             _context = context;
             _userHelper = userHelper;
             _combosHelper = combosHelper;
+            _converterHelper = converterHelper;
         }
 
         // GET: Owners
@@ -214,21 +218,53 @@ namespace MyVet.Web.Controllers
                 return NotFound();
             }
             //FindAsync : Buscar por la llave primaria y es mas rapido
+            //pero no se pueden relacionar tablas en este metodo.
             var owner = await _context.Owners.FindAsync(id.Value);
             if (owner == null)
             {
                 return NotFound();
             }
 
-            var petViewModel = new PetViewModel
+            var model = new PetViewModel
             {
                 Born = DateTime.Today,
                 OwnerId = owner.Id,
                 PetTypes = _combosHelper.GetComboPetTypes()
             };
-            return View(owner);
+
+            return View(model);
         }
+        [HttpPost]
+        public async Task<IActionResult> AddPet(PetViewModel model)
+        {
+            if(ModelState.IsValid)
+            {
+                var path = string.Empty;
 
+                if(model.ImageFile != null)
+                {
+                    var guid = Guid.NewGuid().ToString();
+                    var file = $"{guid}.jpg";
 
+                    path = Path.Combine(
+                        Directory.GetCurrentDirectory(),
+                        "wwwroot\\images\\Pets",
+                        file);
+
+                    using (var stream = new FileStream(path, FileMode.Create))
+                    {
+                        await model.ImageFile.CopyToAsync(stream);
+                    }
+
+                    path = $"~/images/Pets/{file}";                    
+                }
+
+                var pet = await _converterHelper.ToPetAsync(model, path);
+                _context.Pets.Add(pet);
+                await _context.SaveChangesAsync();
+                return RedirectToAction($"Details/{model.OwnerId}");
+            }
+            return View(model);
+        }     
     }
 }

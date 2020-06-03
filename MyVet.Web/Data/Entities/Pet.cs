@@ -23,7 +23,7 @@ namespace MyVet.Web.Data.Entities
 
         [Display(Name = "Born")]
         [Required(ErrorMessage = "The field {0} is mandatory.")]
-        [DataType(DataType.DateTime)]
+        //[DataType(DataType.DateTime)] se quita por dar problemas, se cambiara por un objeto bootstrap
         [DisplayFormat(DataFormatString = "{0:yyyy/MM/dd}", ApplyFormatInEditMode = true)]
         public DateTime Born { get; set; }
 
