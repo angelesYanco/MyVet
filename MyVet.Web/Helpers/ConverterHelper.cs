@@ -24,7 +24,7 @@ namespace MyVet.Web.Helpers
         }
         public async Task<Pet> ToPetAsync(PetViewModel model, string path)
         {
-            return new Pet
+            var pet = new Pet
             {
                 Agendas = model.Agendas,
                 Born = model.Born,
@@ -36,6 +36,13 @@ namespace MyVet.Web.Helpers
                 Race = model.Race,
                 Remarks = model.Remarks
             };
+
+            if(model.Id != 0)
+            {
+                pet.Id = model.Id;
+            }
+
+            return pet;
         }
 
         public PetViewModel ToPetViewModel(Pet pet)
