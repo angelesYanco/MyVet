@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore.Scaffolding;
 using MyVet.Web.Data;
 using System.Diagnostics;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace MyVet.Web.Helpers
 {
@@ -61,5 +62,31 @@ namespace MyVet.Web.Helpers
             };
         }
 
+        public async Task<History> ToHistoryAsync(HistoryViewModel model, bool isNew)
+        {
+            return new History
+            {
+                Date = model.Date.ToUniversalTime(),
+                Description = model.Description,
+                Id = isNew ? 0 : model.Id,
+                Pet = await _dataContext.Pets.FindAsync(model.Id),
+                Remarks = model.Remarks,
+                ServiceType = await _dataContext.ServiceTypes.FindAsync(model.ServiceTypeId)
+            };
+        }
+
+        public HistoryViewModel ToHistoryViewModel(History history)
+        {
+            return new HistoryViewModel
+            {
+                Date = history.Date,
+                Description = history.Description,
+                Id = history.Id,
+                PetId = history.Pet.Id,
+                Remarks = history.Remarks,
+                ServiceTypeId = history.ServiceType.Id,
+                ServiceTypes = _combosHelper.GetComboServiceTypes()
+            };
+        }
     }
 }
