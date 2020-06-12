@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ValueGeneration.Internal;
 using MyVet.Web.Data;
 using MyVet.Web.Data.Entities;
 using MyVet.Web.Helpers;
@@ -190,26 +191,28 @@ namespace MyVet.Web.Controllers
             }
 
             var owner = await _dataContext.Owners
+                .Include(o => o.Pets)
+                .Include(o => o.User)
                 .FirstOrDefaultAsync(m => m.Id == id);
             if (owner == null)
             {
                 return NotFound();
             }
 
-            return View(owner);
-        }
+            if(owner.Pets.Count > 0)
+            {
+                ModelState.AddModelError(String.Empty, "The owner can't be deleted.");
+                return RedirectToAction(nameof(Index));
+            }
 
-        // POST: Owners/Delete/5
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
-        {
-            var owner = await _dataContext.Owners.FindAsync(id);
+            await _userHelper.DeleteUserAsync(owner.User.Email);
+            _dataContext.Owners.Remove(owner);
+
             _dataContext.Owners.Remove(owner);
             await _dataContext.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
-
+                
         private bool OwnerExists(int id)
         {
             return _dataContext.Owners.Any(e => e.Id == id);
