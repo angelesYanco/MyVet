@@ -3,6 +3,7 @@ using MyVet.Web.Data;
 using System.Threading.Tasks;
 using MyVet.Common.Models;
 using Microsoft.EntityFrameworkCore;
+using System.Linq;
 using System.IO.Compression;
 
 namespace MyVet.Web.Controllers.API
@@ -29,13 +30,42 @@ namespace MyVet.Web.Controllers.API
             var owner = await _dataContext.Owners
                 .Include(o => o.User)
                 .Include(o => o.Pets)
-                .Include(o => o.Agendas)
-                .FirstOrDefaultAsync(o => o.User.Email == emailRequest.Email);
-            if(owner == null)
+                .ThenInclude(p => p.PetType)
+                .Include(o => o.Pets)
+                .ThenInclude(p => p.Histories)
+                .ThenInclude(h => h.ServiceType)
+                .FirstOrDefaultAsync(o => o.User.UserName.ToLower() == emailRequest.Email.ToLower());
+
+            var response = new OwnerResponse
             {
-                return NotFound();
-            }
-            return Ok(owner);
+                Id = owner.Id,
+                FirstName = owner.User.FirstName,
+                LastName = owner.User.LastName,
+                Address = owner.User.Address,
+                Document = owner.User.Document,
+                Email = owner.User.Email,
+                PhoneNumber = owner.User.PhoneNumber,
+                Pets = owner.Pets.Select(p => new PetResponse
+                {
+                    Born = p.Born,
+                    Id = p.Id,
+                    ImageUrl = p.ImageFullPath,
+                    Name = p.Name,
+                    Race = p.Race,
+                    Remarks = p.Remarks,
+                    PetType = p.PetType.Name,
+                    Histories = p.Histories.Select(h => new HistoryResponse
+                    {
+                        Date = h.Date,
+                        Description = h.Description,
+                        Id = h.Id,
+                        Remarks = h.Remarks,
+                        ServiceType = h.ServiceType.Name
+                    }).ToList()
+                }).ToList()
+            };
+
+            return Ok(response);
         }
     }
 }
