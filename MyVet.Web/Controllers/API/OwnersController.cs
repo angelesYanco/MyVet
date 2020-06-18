@@ -5,11 +5,14 @@ using MyVet.Common.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using System.IO.Compression;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 
 namespace MyVet.Web.Controllers.API
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class OwnersController : ControllerBase
     {
         private readonly DataContext _dataContext;
